@@ -9,7 +9,7 @@ let _db
 async function getDb() {
   if (!_db) {
     await client.connect()
-    _db = client.db(process.env.DB_NAME || 'ai_inventory')
+    _db = client.db(process.env.DB_NAME)
   }
   return _db
 }

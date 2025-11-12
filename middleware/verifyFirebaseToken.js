@@ -1,18 +1,23 @@
 const admin = require('firebase-admin')
+const path = require('path')
 
 let enabled = true
 if (process.env.FIREBASE_DISABLE_AUTH === 'true') enabled = false
 
-if (enabled && !admin.apps.length && process.env.FIREBASE_PROJECT_ID) {
-  admin.initializeApp({
-    credential: admin.credential.cert({
-      projectId: process.env.FIREBASE_PROJECT_ID,
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-      privateKey: (process.env.FIREBASE_PRIVATE_KEY || '').replace(/\\n/g, '\n')
+// Initialize Firebase Admin from local service account JSON only.
+// If the file is missing or invalid, do NOT attempt env-var fallback.
+if (enabled && !admin.apps.length) {
+  try {
+    const serviceAccountPath = path.join(__dirname, '..', 'model-forge-firebase-adminsdk.json')
+    const serviceAccount = require(serviceAccountPath)
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount)
     })
-  })
-} else if (enabled) {
-  console.warn('[auth] Firebase admin not fully configured; write routes will reject requests.')
+    console.log('[auth] Firebase admin initialized from model-forge-firebase-adminsdk.json')
+  } catch (err) {
+    console.warn('[auth] Firebase admin not configured: could not load model-forge-firebase-adminsdk.json')
+    console.warn("[auth] Place the service account JSON at the project root with the filename 'model-forge-firebase-adminsdk.json' to enable auth.")
+  }
 }
 
 async function verifyFirebaseToken(req, res, next) {
