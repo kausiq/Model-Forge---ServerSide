@@ -1,5 +1,3 @@
-// server.js — AI Model Inventory Manager (MongoDB Native Driver + Express, CommonJS)
-
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
@@ -9,9 +7,9 @@ const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const admin = require('firebase-admin');
 let firebaseEnabled = false;
 try {
-  const serviceAccountPath = process.env.FIREBASE_ADMIN_JSON || './firebase-admin-key.json';
-  const svc = require(serviceAccountPath);
-  admin.initializeApp({ credential: admin.credential.cert(svc) });
+  const decoded = Buffer.from(process.env.FIREBASE_ADMIN_JSON, "base64").toString("utf8");
+  const serviceAccount = JSON.parse(decoded);
+  admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
   firebaseEnabled = true;
   console.log('🔐 Firebase Admin initialized');
 } catch (err) {
@@ -24,6 +22,15 @@ const port = process.env.PORT || 3000;
 // middleware
 app.use(cors());
 app.use(express.json());
+
+
+// ✅ Test route to verify Firebase authentication
+// app.get('/auth/test', verifyFirebaseToken, (req, res) => {
+//   res.send({
+//     message: 'Firebase token verified successfully ✅',
+//     email: req.token_email,
+//   });
+// });
 
 
 // Auth middleware (REQUIRED for PUT/DELETE). If Firebase isn't configured, block the request.

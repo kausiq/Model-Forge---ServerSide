@@ -7,3 +7,5 @@ dist/
 build/
 .coverage
 model-forge-firebase-adminsdk.json
+Model-Client
+.vercel
